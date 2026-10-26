@@ -1,0 +1,120 @@
+import { createBrowserRouter } from "react-router";
+import Login from "./features/auth/pages/Login";
+import Register from "./features/auth/pages/Register";
+import Protected from "./features/auth/components/Protected";
+
+import Home from "./features/interview/pages/Home";
+import Interview from "./features/interview/pages/Interview";
+
+import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+import Landing from "./pages/Landing";
+import MyPlans from "./pages/MyPlans";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Community from "./pages/Community";
+import AdminProtected from "./features/auth/components/AdminProtected";
+import AdminDashboard from "./features/admin/pages/AdminDashboard";
+import ForgotPassword from "./features/auth/pages/ForgotPassword";
+import VerifyOtp from "./features/auth/pages/VerifyOtp";
+import ResetPassword from "./features/auth/pages/ResetPassword";
+import VerifyEmail from "./features/auth/pages/VerifyEmail";
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Landing />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/verify-otp",
+    element: <VerifyOtp />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+  },
+  {
+    path: "/verify-email",
+    element: <VerifyEmail />,
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <Protected>
+        <Dashboard />
+      </Protected>
+    ),
+  },
+  {
+    path: "/app",
+    element: (
+      <Protected>
+        <Home />
+      </Protected>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <Protected>
+        <Settings />
+      </Protected>
+    ),
+  },
+  {
+    path: "/interview/:interviewId",
+    element: (
+      <Protected>
+        <Interview />
+      </Protected>
+    ),
+  },
+  {
+    path: "/plans",
+    element: (
+      <Protected>
+        <MyPlans />
+      </Protected>
+    ),
+  },
+  {
+    path: "/profile",
+    element: (
+      <Protected>
+        <Profile />
+      </Protected>
+    ),
+  },
+  {
+    path: "/community",
+    element: (
+      <Protected>
+        <Community />
+      </Protected>
+    ),
+  },
+  {
+    path: "/admin",
+    element: (
+      <AdminProtected>
+        <AdminDashboard />
+      </AdminProtected>
+    ),
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);

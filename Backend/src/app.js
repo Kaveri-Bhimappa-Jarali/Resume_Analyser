@@ -1,0 +1,43 @@
+import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
+import authRouter from "./routes/auth.routes.js";
+import interviewRouter from "./routes/interview.routes.js";
+import planRouter from "./routes/plan.routes.js";
+import settingsRoutes from "./routes/settings.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+
+const app = express();
+
+app.set("trust proxy", 1);
+app.use(express.json());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        origin.includes("localhost") ||
+        origin.includes("vercel.app")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+app.use("/api/auth", authRouter);
+app.use("/api/interview", interviewRouter);
+app.use("/api/plans", planRouter);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api", uploadRoutes); // stoping this for now
+app.use("/api/admin", adminRoutes);
+
+export default app;
