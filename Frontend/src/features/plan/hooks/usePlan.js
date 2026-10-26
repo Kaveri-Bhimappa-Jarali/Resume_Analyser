@@ -8,36 +8,66 @@ export const usePlan = () => {
 
   const fetchPlans = async () => {
     setLoading(true);
-    const data = await planAPI.getPlans();
-    setPlans(data.plans);
-    setLoading(false);
+    try {
+      const data = await planAPI.getPlans();
+      const list = data?.plans || [];
+      setPlans(list);
+      if (list.length > 0 && !plan) {
+        setPlan(list[0]);
+      }
+      return list;
+    } catch (err) {
+      console.error("Failed to fetch plans:", err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchPlanById = async (planId) => {
     setLoading(true);
-    const data = await planAPI.getPlanById(planId);
-    setPlan(data.plan);
-    setLoading(false);
+    try {
+      const data = await planAPI.getPlanById(planId);
+      if (data?.plan) {
+        setPlan(data.plan);
+      }
+    } catch (err) {
+      console.error("Failed to fetch plan by ID:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createNewPlan = async (payload) => {
     const data = await planAPI.createPlan(payload);
-    setPlans((prev) => [data.plan, ...prev]);
+    if (data?.plan) {
+      setPlans((prev) => [data.plan, ...prev]);
+      setPlan(data.plan);
+    }
+    return data?.plan;
+  };
+
+  const updateLocalPlansList = (updatedPlan) => {
+    if (!updatedPlan) return;
+    setPlan(updatedPlan);
+    setPlans((prev) =>
+      prev.map((p) => (p._id === updatedPlan._id ? updatedPlan : p))
+    );
   };
 
   const toggleTask = async (planId, dayIndex, taskIndex) => {
     const data = await planAPI.toggleTask(planId, dayIndex, taskIndex);
-    setPlan(data.plan);
+    updateLocalPlansList(data?.plan);
   };
 
   const addTask = async (planId, dayIndex, text) => {
     const data = await planAPI.addTask(planId, dayIndex, text);
-    setPlan(data.plan);
+    updateLocalPlansList(data?.plan);
   };
 
   const deleteTask = async (planId, dayIndex, taskIndex) => {
     const data = await planAPI.deleteTask(planId, dayIndex, taskIndex);
-    setPlan(data.plan);
+    updateLocalPlansList(data?.plan);
   };
 
   return {
@@ -49,6 +79,6 @@ export const usePlan = () => {
     createNewPlan,
     toggleTask,
     addTask,
-    deleteTask
+    deleteTask,
   };
 };

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Sidebar from "../layouts/sidebar";
 import { useAuth } from "../features/auth/hooks/useAuth";
+import api from "../services/api";
 import {
   MessageCircle,
   Send,
@@ -232,19 +233,12 @@ const Community = () => {
       formData.append("file", image);
 
       try {
-        // Replace with your actual upload API endpoint
-        // const res = await uploadAPI(formData);
-        // imageUrl = res.url;
-        const res = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/upload`,
-          {
-            method: "POST",
-            body: formData,
+        const res = await api.post("/api/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
           },
-        );
-
-        const data = await res.json();
-        imageUrl = data.url;
+        });
+        imageUrl = res.data.url;
       } catch (err) {
         console.error("Upload failed", err);
       } finally {

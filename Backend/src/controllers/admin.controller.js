@@ -83,26 +83,31 @@ export const deleteUser = async (req, res) => {
 
 //ban
 export const banUser = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  const { id } = req.params;
+    const user = await userModel.findById(id);
 
-  const user = await userModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    if (user.role === "admin") {
+      return res.status(403).json({ message: "Cannot ban admin" });
+    }
+
+    user.isBanned = !user.isBanned;
+
+    await user.save();
+
+    res.json({
+      message: "User status updated",
+      isBanned: user.isBanned,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
-
-  if (user.role === "admin") {
-    return res.status(403).json({ message: "Cannot ban admin" });
-  }
-
-  user.isBanned = !user.isBanned;
-
-  await user.save();
-
-  res.json({
-    message: "User status updated",
-    isBanned: user.isBanned
-  });
-
 };

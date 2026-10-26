@@ -1,9 +1,4 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-  withCredentials: true,
-});
+import api from "../../../services/api";
 
 /**
  * Generate interview report
@@ -30,11 +25,7 @@ export const generateInterviewReport = async ({
     // NEW: mode flag for backend
     formData.append("mode", mode);
 
-    const response = await api.post("/api/interview/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await api.post("/api/interview/", formData);
 
     return response.data;
   } catch (error) {
@@ -96,6 +87,31 @@ export const generateResumePdf = async ({ interviewReportId }) => {
     console.error(
       "Generate Resume PDF Error:",
       error?.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+/**
+ * Evaluate mock interview practice response
+ */
+export const evaluatePracticeAnswer = async ({
+  interviewId,
+  type,
+  currentQuestionIndex,
+  userAnswer,
+}) => {
+  try {
+    const response = await api.post(`/api/interview/${interviewId}/practice`, {
+      type,
+      currentQuestionIndex,
+      userAnswer,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Evaluate Practice Answer Error:",
+      error?.response?.data || error.message
     );
     throw error;
   }

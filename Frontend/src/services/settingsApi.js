@@ -1,13 +1,16 @@
-import axios from "axios";
+import api from "./api";
 
-const API = import.meta.env.VITE_BACKEND_URL;
+export const getSettingsStatus = async () => {
+  const response = await api.get("/api/settings/status");
+  return response.data;
+};
 
 export const saveGrokApiKey = async (apiKey) => {
-  const response = await axios.post(
-    `${API}/api/settings/save-grok-key`,
-    { apiKey },
-    { withCredentials: true }
-  );
+  const response = await api.post("/api/settings/save-grok-key", { apiKey });
+  return response.data;
+};
 
+export const removeGrokApiKey = async () => {
+  const response = await api.delete("/api/settings/remove-grok-key");
   return response.data;
 };

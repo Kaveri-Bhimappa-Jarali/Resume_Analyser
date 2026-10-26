@@ -61,17 +61,17 @@ const ForgotPassword = () => {
               <KeyRound size={30} className="text-white" />
             </div>
             <h1 className="text-4xl font-black text-white tracking-tighter mb-2">
-              Recover <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-400 italic font-light">Key</span>
+              Reset <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-400 italic font-light">Password</span>
             </h1>
             <p className="text-gray-400 text-sm font-medium leading-relaxed">
-              Enter your neural address to receive a one-time <span className="text-pink-500 font-bold">access bypass</span>.
+              Enter your email address to receive a one-time password reset code.
             </p>
           </header>
 
           <form onSubmit={handleSendOtp} className="space-y-8 relative z-10">
             <div className="space-y-3">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 ml-1">
-                Neural Address
+                Email Address
               </label>
               <div className="relative group">
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-pink-500 transition-colors" size={18} />

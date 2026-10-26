@@ -13,61 +13,94 @@ import {
   ChevronRight,
   LayoutGrid,
   Loader2,
-  LayoutDashboard,
-  FileText,
-  LogOut,
-  Settings,
-  User,
-  MessageCircle,
+  Map,
+  ListChecks,
+  Flame,
+  Trophy,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, subDays, isSameDay, startOfToday } from "date-fns";
-import { useAuth } from "../features/auth/hooks/useAuth";
 import Sidebar from "../layouts/sidebar";
-// import Settings from "./Settings";
-
-/* --- SYNCED SIDEBAR ITEM COMPONENT --- */
-// const SidebarItem = ({
-//   icon,
-//   label,
-//   active = false,
-//   highlight = false,
-//   onClick,
-// }) => {
-//   return (
-//     <button
-//       onClick={onClick}
-//       className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group relative ${
-//         active
-//           ? "bg-white/10 text-white shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"
-//           : "text-gray-500 hover:text-white hover:bg-white/5"
-//       } ${highlight ? "text-pink-500" : ""}`}
-//     >
-//       {/* {active && (
-//         <motion.div 
-//           layoutId="activeIndicator"
-//           className="absolute left-0 w-1 h-6 bg-pink-500 rounded-r-full shadow-[0_0_15px_rgba(236,72,153,0.8)]"
-//         />
-//       )} */}
-//       <span
-//         className={`${active ? "text-pink-500" : "group-hover:scale-110 transition-transform"}`}
-//       >
-//         {icon}
-//       </span>
-//       <span className="hidden md:block text-sm font-bold tracking-tight">
-//         {label}
-//       </span>
-//     </button>
-//   );
-// };
 
 const CURRENT_YEAR = new Date().getFullYear();
+
+function buildStarterDays(roadmapTitle) {
+  const topic = roadmapTitle.trim() || "Technical Engineering";
+  return [
+    {
+      day: 1,
+      tasks: [
+        {
+          text: `[Foundations] Review core concepts, architecture, and best practices for ${topic}`,
+          completed: false,
+        },
+        {
+          text: `[Audit] Identify key knowledge gaps and set up local practice environment`,
+          completed: false,
+        },
+      ],
+    },
+    {
+      day: 2,
+      tasks: [
+        {
+          text: `[Implementation] Build or refactor a core module demonstrating ${topic} patterns`,
+          completed: false,
+        },
+        {
+          text: `[Problem Solving] Practice 3 medium technical questions related to ${topic}`,
+          completed: false,
+        },
+      ],
+    },
+    {
+      day: 3,
+      tasks: [
+        {
+          text: `[System Design] Map out scalability, caching, and data flow architecture`,
+          completed: false,
+        },
+        {
+          text: `[Optimization] Review debugging workflows, error handling, and performance tuning`,
+          completed: false,
+        },
+      ],
+    },
+    {
+      day: 4,
+      tasks: [
+        {
+          text: `[Testing & Quality] Write unit/integration tests and verify edge cases`,
+          completed: false,
+        },
+        {
+          text: `[Resume Alignment] Refine project bullet points with quantifiable impact metrics`,
+          completed: false,
+        },
+      ],
+    },
+    {
+      day: 5,
+      tasks: [
+        {
+          text: `[Mock Interview] Complete a timed technical & behavioral simulation session`,
+          completed: false,
+        },
+        {
+          text: `[Final Review] Consolidate notes and review high-priority interview questions`,
+          completed: false,
+        },
+      ],
+    },
+  ];
+}
 
 export default function MyPlans() {
   const {
     plans,
     plan,
+    loading,
     fetchPlans,
     fetchPlanById,
     createNewPlan,
@@ -78,21 +111,21 @@ export default function MyPlans() {
 
   const [title, setTitle] = useState("");
   const [selectedDay, setSelectedDay] = useState(0);
+  const [viewMode, setViewMode] = useState("timeline"); // "timeline" | "phase"
   const [taskText, setTaskText] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [activeYear, setActiveYear] = useState(CURRENT_YEAR);
-  const navigate = useNavigate();
-  const { handleLogout } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
     fetchPlans();
-  }, []);
+  }, [location.key]);
 
   useEffect(() => {
     setSelectedDay(0);
   }, [plan?._id]);
 
-  /* --- HEATMAP LOGIC (UNCHANGED) --- */
+  /* --- HEATMAP LOGIC --- */
   const heatmapWeeks = useMemo(() => {
     const allCompletedTasks =
       plans?.flatMap(
@@ -104,8 +137,8 @@ export default function MyPlans() {
                 .map((t) => ({
                   ...t,
                   date: new Date(t.completedAt),
-                })) || [],
-          ) || [],
+                })) || []
+          ) || []
       ) || [];
 
     const startOfYearDate = new Date(activeYear, 0, 1);
@@ -116,7 +149,7 @@ export default function MyPlans() {
 
     while (iterDate <= endOfYearDate || dayRegistry.length % 7 !== 0) {
       const count = allCompletedTasks.filter((task) =>
-        isSameDay(task.date, iterDate),
+        isSameDay(task.date, iterDate)
       ).length;
       let level = 0;
       if (count > 0 && count <= 2) level = 1;
@@ -135,23 +168,24 @@ export default function MyPlans() {
     return columns;
   }, [plans, activeYear]);
 
-  /* --- STREAK LOGIC (UNCHANGED) --- */
+  /* --- STREAK LOGIC --- */
   const { currentStreak, bestStreak } = useMemo(() => {
     const completedDates =
       plans?.flatMap(
         (p) =>
-          p.days?.flatMap((d) =>
-            d.tasks
-              ?.filter((t) => t.completed)
-              .map((t) => new Date(t.completedAt)),
-          ) || [],
+          p.days?.flatMap(
+            (d) =>
+              d.tasks
+                ?.filter((t) => t.completed && t.completedAt)
+                .map((t) => new Date(t.completedAt)) || []
+          ) || []
       ) || [];
     if (completedDates.length === 0) return { currentStreak: 0, bestStreak: 0 };
     const uniqueDays = [
       ...new Set(
         completedDates.map((d) =>
-          new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(),
-        ),
+          new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+        )
       ),
     ].sort((a, b) => a - b);
     let best = 1,
@@ -182,387 +216,535 @@ export default function MyPlans() {
     return labels;
   }, [heatmapWeeks]);
 
-  const progress = useMemo(() => {
+  const overallPlanProgress = useMemo(() => {
+    const allTasks = plan?.days?.flatMap((d) => d.tasks || []) || [];
+    if (allTasks.length === 0) return 0;
+    return Math.round(
+      (allTasks.filter((t) => t.completed).length / allTasks.length) * 100
+    );
+  }, [plan]);
+
+  const phaseProgress = useMemo(() => {
     const tasks = plan?.days?.[selectedDay]?.tasks || [];
     if (tasks.length === 0) return 0;
     return Math.round(
-      (tasks.filter((t) => t.completed).length / tasks.length) * 100,
+      (tasks.filter((t) => t.completed).length / tasks.length) * 100
     );
   }, [plan, selectedDay]);
 
   const handleCreatePlan = async () => {
     if (!title.trim() || isCreating) return;
     setIsCreating(true);
-    await createNewPlan({
-      title,
-      days: Array.from({ length: 5 }, (_, i) => ({ day: i + 1, tasks: [] })),
-    });
-    setTitle("");
-    setIsCreating(false);
-    fetchPlans();
+    try {
+      await createNewPlan({
+        title: title.trim(),
+        days: buildStarterDays(title),
+      });
+      setTitle("");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleAddTask = () => {
     if (!taskText.trim() || !plan?._id) return;
-    addTask(plan._id, selectedDay, taskText);
+    addTask(plan._id, selectedDay, taskText.trim());
     setTaskText("");
   };
 
   return (
-    <div className="flex min-h-screen bg-[#02000d] text-slate-200 selection:bg-pink-500/30 font-sans">
-      {/* --- SIDEBAR NAVIGATION (SYNCED) --- */}
-      {/* <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 border-r border-white/5 bg-[#030014]/50 backdrop-blur-2xl z-50 flex flex-col items-center md:items-stretch py-8 px-4">
-        <div
-          onClick={() => navigate("/")}
-          className="flex items-center gap-3 px-2 mb-12 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-600 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(219,39,119,0.4)]">
-            <Zap size={22} className="text-white fill-white" />
-          </div>
-          <span className="hidden md:block text-xl font-black tracking-tighter text-white uppercase">
-            Nexus<span className="text-pink-500">.</span>
-          </span>
-        </div>
-
-        <nav className="flex-1 space-y-2 w-full">
-          <SidebarItem
-            icon={<LayoutDashboard size={20} />}
-            label="Overview"
-            onClick={() => navigate("/dashboard")}
-          />
-          <SidebarItem
-            icon={<FileText size={20} />}
-            label="My Plans"
-            active
-            onClick={() => navigate("/plans")}
-          />
-          <SidebarItem
-            icon={<MessageCircle size={20} />}
-            label="Community"
-            onClick={() => navigate("/community")}
-            active={location.pathname === "/community"}
-          />
-          <SidebarItem
-            icon={<Plus size={20} />}
-            label="New Strategy"
-            highlight
-            onClick={() => navigate("/app")}
-          />
-          <SidebarItem
-            icon={<Settings size={20} />}
-            label="Settings"
-            onClick={() => navigate("/settings")}
-          />
-        </nav>
-
-        <SidebarItem
-          icon={<User size={20} />}
-          label="Profile"
-          onClick={() => navigate("/profile")}
-          active={location.pathname === "/profile"}
-        />
-
-        <button
-          onClick={handleLogout}
-          className="mt-auto flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-pink-500 hover:bg-pink-500/10 transition-all duration-300 w-full group"
-        >
-          <LogOut
-            size={20}
-            className="group-hover:rotate-12 transition-transform mb-1"
-          />
-          <span className="hidden md:block font-bold text-sm">Log out</span>
-        </button>
-      </aside> */}
-
+    <div className="flex min-h-screen bg-[#090d16] text-slate-100 selection:bg-indigo-500/30 font-sans">
       <Sidebar />
 
-      {/* --- MAIN CONTENT AREA (SYNCED MARGIN) --- */}
-      <main className="flex-1 md:ml-64 p-4 md:p-12 lg:p-16 pb-20 md:pb-12 relative overflow-x-hidden">
-        {/* Background Effects */}
+      <main className="flex-1 md:ml-64 p-6 md:p-12 lg:p-16 pb-24 md:pb-16 relative overflow-x-hidden">
+        {/* Subtle Background Glows */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-[-10%] right-[10%] w-[600px] h-[600px] bg-indigo-600/10 blur-[150px] rounded-full" />
-          <div className="absolute bottom-[5%] left-[5%] w-[400px] h-[400px] bg-pink-600/10 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute top-[-10%] right-[10%] w-[520px] h-[520px] bg-indigo-600/8 blur-[140px] rounded-full" />
+          <div className="absolute bottom-[5%] left-[10%] w-[450px] h-[450px] bg-sky-600/6 blur-[130px] rounded-full" />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto">
-          {/* HEADER SECTION (SYNCED DESIGN) */}
-          <header className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="flex items-center gap-2 text-pink-500 mb-3">
-                <Zap size={18} fill="currentColor" className="animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-[0.4em]">
-                  Neural Interface v2.0
-                </span>
+        <div className="relative z-10 max-w-6xl mx-auto space-y-10">
+          {/* HEADER SECTION */}
+          <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-slate-800/80 pb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-3">
+                <Map size={13} />
+                Technical Roadmap & Timeline Tracker
               </div>
-              <h1 className="text-5xl md:text-6xl font-black leading-tight tracking-tighter text-white">
-                Systems{" "}
-                <span className="italic font-light text-gray-500">Active</span>
+              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                Study Plans & Execution Timeline
               </h1>
-            </motion.div>
+              <p className="text-slate-400 text-sm mt-1">
+                Create structured technical roadmaps, track daily milestones, and monitor consistency.
+              </p>
+            </div>
 
-            <div className="flex items-center bg-white/[0.03] border border-white/10 p-1.5 rounded-2xl backdrop-blur-2xl shadow-2xl">
+            <div className="flex items-center bg-slate-900/80 border border-slate-800 p-1.5 rounded-xl backdrop-blur-xl shadow-lg w-full lg:w-auto">
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreatePlan()}
-                placeholder="Deploy new roadmap..."
-                className="bg-transparent border-none px-5 py-2 outline-none w-full md:w-64 text-sm font-medium"
+                placeholder="New roadmap title (e.g. Full Stack Prep)..."
+                className="bg-transparent border-none px-4 py-2 outline-none w-full lg:w-72 text-xs md:text-sm text-white placeholder:text-slate-500"
               />
               <button
                 onClick={handleCreatePlan}
-                disabled={isCreating}
-                className="flex items-center gap-2 bg-white text-black hover:bg-pink-500 hover:text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50"
+                disabled={isCreating || !title.trim()}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg font-semibold text-xs transition-all disabled:opacity-50 shrink-0 cursor-pointer"
               >
                 {isCreating ? (
-                  <Loader2 className="animate-spin" size={16} />
+                  <Loader2 className="animate-spin" size={15} />
                 ) : (
-                  <Plus size={16} strokeWidth={3} />
+                  <Plus size={15} />
                 )}
-                Create
+                Create Roadmap
               </button>
             </div>
           </header>
 
           {/* ACTIVITY HEATMAP SECTION */}
-          <section className="mb-20">
-            <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-3xl shadow-inner">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 px-3 py-1 rounded-lg text-xs font-bold">
-                    🔥 <span className="text-pink-400">{currentStreak}</span>{" "}
-                    <span className="text-gray-500 uppercase tracking-tighter">
-                      Streak
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-lg text-xs font-bold">
-                    🏆 <span className="text-indigo-400">{bestStreak}</span>{" "}
-                    <span className="text-gray-500 uppercase tracking-tighter">
-                      Best
-                    </span>
-                  </div>
+          <section className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-6 md:p-8 backdrop-blur-xl shadow-xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold">
+                  <Flame size={14} className="text-emerald-400" />
+                  <span className="text-emerald-400 font-bold">{currentStreak}</span>
+                  <span className="text-slate-400">Day Streak</span>
                 </div>
+                <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold">
+                  <Trophy size={14} className="text-indigo-400" />
+                  <span className="text-indigo-400 font-bold">{bestStreak}</span>
+                  <span className="text-slate-400">Best Streak</span>
+                </div>
+              </div>
 
-                <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/5">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800">
                   {[CURRENT_YEAR - 2, CURRENT_YEAR - 1, CURRENT_YEAR].map(
                     (yr) => (
                       <button
                         key={yr}
                         onClick={() => setActiveYear(yr)}
-                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${activeYear === yr ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20" : "text-gray-500 hover:text-gray-300"}`}
+                        className={`px-3.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          activeYear === yr
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
                       >
                         {yr}
                       </button>
-                    ),
+                    )
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
                   <span>Less</span>
                   {[0, 1, 2, 3, 4].map((l) => (
                     <div
                       key={l}
-                      className={`w-3 h-3 rounded-[2px] ${l === 0 ? "bg-white/[0.05]" : l === 1 ? "bg-indigo-900/40" : l === 2 ? "bg-indigo-700/60" : l === 3 ? "bg-indigo-500/80" : "bg-pink-500"}`}
+                      className={`w-3 h-3 rounded-[3px] ${
+                        l === 0
+                          ? "bg-slate-800/80"
+                          : l === 1
+                            ? "bg-indigo-900/70"
+                            : l === 2
+                              ? "bg-indigo-700/80"
+                              : l === 3
+                                ? "bg-indigo-500"
+                                : "bg-emerald-400"
+                      }`}
                     />
                   ))}
                   <span>More</span>
                 </div>
               </div>
+            </div>
 
-              <div className="overflow-x-auto no-scrollbar relative">
-                <div className="relative flex flex-col gap-2 w-max">
-                  <div className="flex h-4 mb-2 relative">
-                    {monthLabels.map((mon, i) => (
-                      <div
-                        key={i}
-                        className="text-[10px] text-gray-600 font-bold uppercase absolute"
-                        style={{ left: `${mon.index * 18}px` }}
-                      >
-                        {mon.name}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-[4px]">
-                    {heatmapWeeks.map((week, w) => (
-                      <div key={w} className="flex flex-col gap-[4px]">
-                        {week.map((day, d) => (
-                          <motion.div
-                            key={d}
-                            whileHover={{ scale: 1.5, zIndex: 10 }}
-                            title={`${day.count} tasks on ${format(day.date, "MMM do")}`}
-                            className={`w-3.5 h-3.5 rounded-[3px] transition-all duration-700 ${day.date.getFullYear() !== activeYear ? "opacity-0" : ""} ${day.level === 0 ? "bg-white/[0.05]" : day.level === 1 ? "bg-indigo-900/40" : day.level === 2 ? "bg-indigo-700/60" : day.level === 3 ? "bg-indigo-500/80" : "bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]"}`}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
+            <div className="overflow-x-auto no-scrollbar relative">
+              <div className="relative flex flex-col gap-2 w-max">
+                <div className="flex h-4 mb-1 relative">
+                  {monthLabels.map((mon, i) => (
+                    <div
+                      key={i}
+                      className="text-[10px] text-slate-500 font-semibold uppercase absolute"
+                      style={{ left: `${mon.index * 18}px` }}
+                    >
+                      {mon.name}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-[4px]">
+                  {heatmapWeeks.map((week, w) => (
+                    <div key={w} className="flex flex-col gap-[4px]">
+                      {week.map((day, d) => (
+                        <div
+                          key={d}
+                          title={`${day.count} tasks completed on ${format(
+                            day.date,
+                            "MMM do, yyyy"
+                          )}`}
+                          className={`w-3.5 h-3.5 rounded-[3px] transition-colors ${
+                            day.date.getFullYear() !== activeYear
+                              ? "opacity-0"
+                              : ""
+                          } ${
+                            day.level === 0
+                              ? "bg-slate-800/70"
+                              : day.level === 1
+                                ? "bg-indigo-900/70"
+                                : day.level === 2
+                                  ? "bg-indigo-700/80"
+                                  : day.level === 3
+                                    ? "bg-indigo-500"
+                                    : "bg-emerald-400"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </section>
 
-          {/* MAIN GRID */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            <aside className="lg:col-span-4 space-y-6">
-              <div className="flex items-center gap-2 px-2 text-xs font-black uppercase tracking-widest text-gray-500">
-                <LayoutGrid size={14} className="text-pink-500" /> Tactical
-                Units
+          {/* MAIN ROADMAP & TIMELINE GRID */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* LEFT SIDEBAR: ROADMAP LIST */}
+            <aside className="lg:col-span-4 space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <LayoutGrid size={14} className="text-indigo-400" />
+                  Saved Roadmaps ({plans?.length || 0})
+                </span>
               </div>
-              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                {plans?.map((p) => (
-                  <motion.div
-                    key={p._id}
-                    layoutId={p._id}
-                    onClick={() => fetchPlanById(p._id)}
-                    className={`p-6 rounded-3xl cursor-pointer border transition-all ${plan?._id === p._id ? "bg-gradient-to-br from-indigo-500/10 to-pink-500/10 border-pink-500/40 shadow-xl" : "bg-white/[0.02] border-white/5 hover:border-white/20"}`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-bold text-lg text-white">
-                          {p.title}
-                        </h3>
-                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-1 mt-1">
-                          <Target size={12} /> {p.days?.length} phases
-                        </span>
+
+              <div className="space-y-3 max-h-[540px] overflow-y-auto pr-1 custom-scrollbar">
+                {plans?.length > 0 ? (
+                  plans.map((p) => {
+                    const pTasks = p.days?.flatMap((d) => d.tasks || []) || [];
+                    const pDone = pTasks.filter((t) => t.completed).length;
+                    const pPct =
+                      pTasks.length > 0
+                        ? Math.round((pDone / pTasks.length) * 100)
+                        : 0;
+                    const isSelected = plan?._id === p._id;
+
+                    return (
+                      <div
+                        key={p._id}
+                        onClick={() => fetchPlanById(p._id)}
+                        className={`p-5 rounded-2xl cursor-pointer border transition-all ${
+                          isSelected
+                            ? "bg-indigo-600/15 border-indigo-500/50 shadow-lg"
+                            : "bg-slate-900/60 border-slate-800/80 hover:border-slate-700"
+                        }`}
+                      >
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-sm md:text-base text-white truncate">
+                              {p.title}
+                            </h3>
+                            <span className="text-xs text-slate-400 font-medium flex items-center gap-2 mt-1">
+                              <Target size={13} className="text-indigo-400" />
+                              {p.days?.length || 5} Phases • {pPct}% Complete
+                            </span>
+                          </div>
+                          <ChevronRight
+                            size={18}
+                            className={
+                              isSelected ? "text-indigo-400 shrink-0" : "text-slate-600 shrink-0"
+                            }
+                          />
+                        </div>
                       </div>
-                      <ChevronRight
-                        size={18}
-                        className={
-                          plan?._id === p._id
-                            ? "text-pink-500"
-                            : "text-gray-700"
-                        }
-                      />
-                    </div>
-                  </motion.div>
-                ))}
+                    );
+                  })
+                ) : (
+                  <div className="p-6 rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 text-center space-y-2">
+                    <p className="text-xs font-semibold text-slate-300">
+                      No Roadmaps Created Yet
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      Enter a title above and click &ldquo;Create Roadmap&rdquo; or sync one from an interview report.
+                    </p>
+                  </div>
+                )}
               </div>
             </aside>
 
-            <main className="lg:col-span-8">
+            {/* RIGHT PANEL: ACTIVE ROADMAP TIMELINE & CHECKLIST */}
+            <div className="lg:col-span-8">
               <AnimatePresence mode="wait">
                 {plan ? (
                   <motion.div
                     key={plan._id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="bg-white/[0.01] border border-white/10 rounded-[3rem] p-10 backdrop-blur-3xl shadow-2xl relative overflow-hidden"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-6 md:p-8 backdrop-blur-xl shadow-xl space-y-8"
                   >
-                    <div className="flex justify-between items-start mb-10">
+                    {/* Plan Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
                       <div>
-                        <h2 className="text-3xl font-black text-white">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+                          Active Technical Roadmap
+                        </span>
+                        <h2 className="text-2xl font-bold text-white mt-0.5">
                           {plan.title}
                         </h2>
-                        <p className="text-gray-500 text-sm mt-1 uppercase font-bold tracking-widest">
-                          Operational Phase {selectedDay + 1}
-                        </p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-4xl font-black text-pink-500">
-                          {progress}%
-                        </div>
-                        <div className="text-[10px] font-black text-gray-500 uppercase tracking-tighter">
-                          Efficiency
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden mb-12">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        className="h-full bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-600"
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mb-10">
-                      {plan.days?.map((d, i) => (
+                      <div className="flex items-center gap-2 bg-slate-950/80 p-1 rounded-xl border border-slate-800 self-start sm:self-center">
                         <button
-                          key={i}
-                          onClick={() => setSelectedDay(i)}
-                          className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedDay === i ? "bg-white text-black shadow-lg shadow-white/10" : "bg-white/5 text-gray-500 hover:bg-white/10"}`}
+                          onClick={() => setViewMode("timeline")}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                            viewMode === "timeline"
+                              ? "bg-indigo-600 text-white"
+                              : "text-slate-400 hover:text-slate-200"
+                          }`}
                         >
-                          Phase {d.day}
+                          <Map size={13} /> Timeline View
                         </button>
-                      ))}
-                    </div>
-
-                    <div className="space-y-3 mb-10">
-                      {plan.days?.[selectedDay]?.tasks?.map((task, index) => (
-                        <motion.div
-                          key={index}
-                          className="group flex items-center justify-between p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all"
+                        <button
+                          onClick={() => setViewMode("phase")}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                            viewMode === "phase"
+                              ? "bg-indigo-600 text-white"
+                              : "text-slate-400 hover:text-slate-200"
+                          }`}
                         >
-                          <div
-                            onClick={() =>
-                              toggleTask(plan._id, selectedDay, index)
-                            }
-                            className="flex items-center gap-4 cursor-pointer"
-                          >
-                            {task.completed ? (
-                              <CheckCircle2
-                                size={22}
-                                className="text-pink-500"
-                              />
-                            ) : (
-                              <Circle size={22} className="text-gray-700" />
-                            )}
-                            <span
-                              className={`text-sm font-medium ${task.completed ? "line-through text-gray-600" : "text-gray-200"}`}
-                            >
-                              {task.text}
-                            </span>
-                          </div>
-                          <Trash2
-                            size={18}
-                            onClick={() =>
-                              deleteTask(plan._id, selectedDay, index)
-                            }
-                            className="text-red-500/40 hover:text-red-500 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                          />
-                        </motion.div>
-                      ))}
+                          <ListChecks size={13} /> Phase Focus
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex gap-4 p-2 bg-black/30 rounded-2xl border border-white/5 focus-within:border-pink-500/30 transition-all">
-                      <input
-                        value={taskText}
-                        onChange={(e) => setTaskText(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddTask()}
-                        placeholder="Input objective..."
-                        className="flex-1 bg-transparent px-4 py-3 outline-none text-sm"
-                      />
-                      <button
-                        onClick={handleAddTask}
-                        className="bg-white text-black px-8 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-pink-500 hover:text-white transition-all"
-                      >
-                        Append
-                      </button>
+                    {/* Overall Progress */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs font-semibold mb-2">
+                        <span className="text-slate-300">
+                          Overall Roadmap Completion
+                        </span>
+                        <span className="text-emerald-400">
+                          {overallPlanProgress}%
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${overallPlanProgress}%` }}
+                          className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500"
+                        />
+                      </div>
                     </div>
+
+                    {viewMode === "timeline" ? (
+                      /* FULL VERTICAL TIMELINE VIEW */
+                      <div className="space-y-6 pt-2">
+                        {plan.days?.map((d, dayIdx) => {
+                          const dayTasks = d.tasks || [];
+                          const dayDone = dayTasks.filter((t) => t.completed).length;
+                          return (
+                            <div
+                              key={dayIdx}
+                              className="relative pl-11 md:pl-14 pb-6 last:pb-0 group"
+                            >
+                              <div className="absolute left-[17px] md:left-[21px] top-9 bottom-0 w-[2px] bg-slate-800 group-last:hidden" />
+                              <div
+                                onClick={() => {
+                                  setSelectedDay(dayIdx);
+                                  setViewMode("phase");
+                                }}
+                                className={`absolute left-0 top-0 w-9 h-9 md:w-11 md:h-11 rounded-xl border flex items-center justify-center text-xs font-bold cursor-pointer transition-all ${
+                                  dayTasks.length > 0 && dayDone === dayTasks.length
+                                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                                    : "bg-slate-950 border-slate-700 text-indigo-400 hover:border-indigo-500"
+                                }`}
+                              >
+                                D{d.day}
+                              </div>
+
+                              <div className="bg-slate-950/60 border border-slate-800/90 rounded-xl p-4 md:p-5 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-sm font-bold text-white">
+                                    Phase {d.day} Execution
+                                  </h4>
+                                  <span className="text-[11px] font-semibold text-slate-400">
+                                    {dayDone}/{dayTasks.length} completed
+                                  </span>
+                                </div>
+
+                                {dayTasks.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {dayTasks.map((task, tIdx) => (
+                                      <div
+                                        key={tIdx}
+                                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800/80 hover:border-slate-700 transition-all group/item"
+                                      >
+                                        <div
+                                          onClick={() =>
+                                            toggleTask(plan._id, dayIdx, tIdx)
+                                          }
+                                          className="flex items-start gap-3 cursor-pointer flex-1"
+                                        >
+                                          {task.completed ? (
+                                            <CheckCircle2
+                                              size={17}
+                                              className="text-emerald-400 shrink-0 mt-0.5"
+                                            />
+                                          ) : (
+                                            <Circle
+                                              size={17}
+                                              className="text-slate-500 shrink-0 mt-0.5"
+                                            />
+                                          )}
+                                          <span
+                                            className={`text-xs md:text-sm ${
+                                              task.completed
+                                                ? "line-through text-slate-500"
+                                                : "text-slate-200"
+                                            }`}
+                                          >
+                                            {task.text}
+                                          </span>
+                                        </div>
+                                        <button
+                                          onClick={() =>
+                                            deleteTask(plan._id, dayIdx, tIdx)
+                                          }
+                                          className="text-slate-600 hover:text-rose-400 opacity-0 group-hover/item:opacity-100 transition-opacity cursor-pointer"
+                                        >
+                                          <Trash2 size={15} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-slate-500 italic">
+                                    No tasks in Phase {d.day} yet.
+                                  </p>
+                                )}
+
+                                <button
+                                  onClick={() => {
+                                    setSelectedDay(dayIdx);
+                                    setViewMode("phase");
+                                  }}
+                                  className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                                >
+                                  + Add or manage tasks in Phase {d.day}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      /* SINGLE PHASE FOCUS VIEW */
+                      <div className="space-y-6">
+                        <div className="flex flex-wrap gap-2">
+                          {plan.days?.map((d, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setSelectedDay(i)}
+                              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                                selectedDay === i
+                                  ? "bg-indigo-600 text-white shadow-sm"
+                                  : "bg-slate-950/80 border border-slate-800 text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              Phase {d.day} ({phaseProgress}%)
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {plan.days?.[selectedDay]?.tasks?.length > 0 ? (
+                            plan.days[selectedDay].tasks.map((task, index) => (
+                              <div
+                                key={index}
+                                className="group flex items-center justify-between p-4 rounded-xl border border-slate-800/80 bg-slate-950/60 hover:border-slate-700 transition-all"
+                              >
+                                <div
+                                  onClick={() =>
+                                    toggleTask(plan._id, selectedDay, index)
+                                  }
+                                  className="flex items-center gap-3.5 cursor-pointer flex-1"
+                                >
+                                  {task.completed ? (
+                                    <CheckCircle2
+                                      size={20}
+                                      className="text-emerald-400 shrink-0"
+                                    />
+                                  ) : (
+                                    <Circle
+                                      size={20}
+                                      className="text-slate-500 shrink-0"
+                                    />
+                                  )}
+                                  <span
+                                    className={`text-xs md:text-sm font-medium ${
+                                      task.completed
+                                        ? "line-through text-slate-500"
+                                        : "text-slate-200"
+                                    }`}
+                                  >
+                                    {task.text}
+                                  </span>
+                                </div>
+                                <Trash2
+                                  size={16}
+                                  onClick={() =>
+                                    deleteTask(plan._id, selectedDay, index)
+                                  }
+                                  className="text-slate-600 hover:text-rose-400 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl text-slate-500 text-xs">
+                              No tasks added to Phase {selectedDay + 1} yet. Add one below.
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3 p-1.5 bg-slate-950/80 rounded-xl border border-slate-800 focus-within:border-indigo-500/50 transition-all">
+                          <input
+                            value={taskText}
+                            onChange={(e) => setTaskText(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleAddTask()
+                            }
+                            placeholder={`Add a new milestone to Phase ${selectedDay + 1}...`}
+                            className="flex-1 bg-transparent px-3.5 py-2.5 outline-none text-xs md:text-sm text-white placeholder:text-slate-500"
+                          />
+                          <button
+                            onClick={handleAddTask}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 rounded-lg font-semibold text-xs transition-all cursor-pointer"
+                          >
+                            Add Task
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="h-full flex flex-col items-center justify-center py-40 border border-dashed border-white/10 rounded-[4rem] bg-white/[0.01]"
+                    className="flex flex-col items-center justify-center py-24 px-6 border border-dashed border-slate-800 rounded-2xl bg-slate-900/30 text-center"
                   >
-                    <Zap
-                      size={48}
-                      className="text-pink-500 mb-6 animate-pulse"
-                    />
-                    <h3 className="text-xl font-bold text-white mb-2">
-                      Command Center Offline
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4">
+                      <Map size={26} />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">
+                      {loading ? "Loading Roadmaps..." : "Initialize Your First Roadmap"}
                     </h3>
-                    <p className="text-gray-600 text-sm max-w-xs text-center">
-                      Select a unit from the sidebar to initialize the neural
-                      interface.
+                    <p className="text-slate-400 text-xs md:text-sm max-w-md mb-6">
+                      Type a target role or study goal in the top bar (for example, &ldquo;Full Stack Engineer Prep&rdquo;) and click Create Roadmap to generate a 5-phase timeline.
                     </p>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </main>
+            </div>
           </div>
         </div>
       </main>
@@ -571,7 +753,7 @@ export default function MyPlans() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 10px; }
       `}</style>
     </div>
   );

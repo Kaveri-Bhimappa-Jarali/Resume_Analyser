@@ -1,22 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInterview } from "../hooks/useInterview.js";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import {
   Briefcase,
   User,
   Upload,
   Sparkles,
   FileText,
-  AlertCircle,
-  ArrowRight,
-  Brain,
-  Lock,
-  X,
-  CheckCircle2,
-  Terminal,
   Cpu,
   ShieldCheck,
   History,
@@ -24,329 +17,273 @@ import {
   Activity,
   ArrowLeft,
 } from "lucide-react";
-import { useAuth } from "../../auth/hooks/useAuth.js";
 
 const Home = () => {
   const { loading, generateReport, reports } = useInterview();
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [jobDescription, setJobDescription] = useState("");
   const [selfDescription, setSelfDescription] = useState("");
   const [fileName, setFileName] = useState("");
   const resumeInputRef = useRef();
 
+  useEffect(() => {
+    if (location.state?.triggerUpload && resumeInputRef.current) {
+      resumeInputRef.current.click();
+    }
+  }, [location.state]);
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setFileName(file.name);
   };
 
-  const handleFreeAnalysis = async () => {
-    const resumeFile = resumeInputRef.current.files[0];
-    if (!resumeFile && !selfDescription) {
-      alert("Please upload a resume or write your profile.");
+  const handleRunAnalysis = async (mode = "full") => {
+    const resumeFile = resumeInputRef.current?.files?.[0];
+    if (!resumeFile && !selfDescription.trim()) {
+      alert("Please upload a resume file or enter your professional summary.");
       return;
     }
-    const data = await generateReport({
-      jobDescription,
-      selfDescription,
-      resumeFile,
-      mode: "analysis",
-    });
-    if (data?._id) navigate(`/interview/${data._id}`);
-  };
-
-  const handleFullStrategy = async () => {
-    if (!user?.grokApiKey) {
-      navigate("/settings");
-      return;
+    try {
+      const data = await generateReport({
+        jobDescription,
+        selfDescription,
+        resumeFile,
+        mode,
+      });
+      if (data?._id) {
+        navigate(`/interview/${data._id}`);
+      } else {
+        alert("Failed to generate report. Please verify your backend server connection.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert(
+        error.response?.data?.message ||
+          "An error occurred during analysis. Please try again."
+      );
     }
-    const resumeFile = resumeInputRef.current.files[0];
-    const data = await generateReport({
-      jobDescription,
-      selfDescription,
-      resumeFile,
-      mode: "full",
-    });
-    if (data?._id) navigate(`/interview/${data._id}`);
   };
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#02000d] flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.08),transparent)] animate-pulse" />
-        <div className="relative group">
-          <div className="absolute inset-0 bg-pink-500/20 blur-2xl rounded-full group-hover:bg-pink-500/40 transition-all duration-700" />
-          <div className="relative w-32 h-32 border border-pink-500/30 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <div className="w-24 h-24 border-4 border-t-pink-500 border-r-indigo-500 border-b-transparent border-l-transparent rounded-full animate-spin" />
+      <main className="min-h-screen bg-[#090d16] flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="relative">
+          <div className="relative w-24 h-24 border border-indigo-500/30 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-t-indigo-500 border-r-sky-500 border-b-transparent border-l-transparent rounded-full animate-spin" />
             <Cpu
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white"
-              size={32}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-400"
+              size={26}
             />
           </div>
         </div>
-        <h2 className="text-2xl font-black text-white mt-12 tracking-[0.4em] uppercase text-center px-4">
-          Neural <span className="text-pink-500">Syncing</span>
+        <h2 className="text-lg font-bold text-white mt-8 tracking-wide">
+          Analyzing Resume & Building Technical Roadmap...
         </h2>
-        <div className="mt-4 flex gap-1">
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
-              className="w-1.5 h-1.5 bg-pink-500 rounded-full"
-            />
-          ))}
-        </div>
+        <p className="text-xs text-slate-400 mt-1">
+          Extracting skills, computing ATS match score, and preparing 5-day timeline
+        </p>
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#02000d] text-slate-200 selection:bg-pink-500/30 font-sans pb-32">
-      {/* Dynamic Background */}
+    <div className="min-h-screen bg-[#090d16] text-slate-100 selection:bg-indigo-500/30 font-sans pb-24">
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 blur-[180px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-600/10 blur-[150px] rounded-full" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150" />
+        <div className="absolute top-[-15%] left-[-10%] w-[45%] h-[45%] bg-indigo-600/8 blur-[150px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-600/6 blur-[140px] rounded-full" />
       </div>
 
-      <header className="max-w-7xl mx-auto pt-12 md:pt-24 pb-12 md:pb-20 px-6">
-        {/* BACK BUTTON */}
-        <motion.button
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
+      <header className="max-w-6xl mx-auto pt-10 md:pt-16 pb-10 px-6">
+        <button
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 text-gray-500 hover:text-white mb-10 transition-colors group"
+          className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors group cursor-pointer"
         >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Exit to Dashboard</span>
-        </motion.button>
+          <ArrowLeft
+            size={16}
+            className="group-hover:-translate-x-1 transition-transform"
+          />
+          <span className="text-xs font-semibold">Back to Dashboard</span>
+        </button>
 
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-6"
-        >
-          <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full flex items-center gap-2 backdrop-blur-md">
-            <Activity size={12} className="text-pink-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
-              Tactical Interface v3.0
-            </span>
-          </div>
-        </motion.div>
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-4">
+          <Activity size={13} className="text-indigo-400" />
+          <span className="text-xs font-semibold text-indigo-400">
+            AI Resume Strategy Studio
+          </span>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black text-white leading-[0.85] tracking-tighter mb-4">
-            COMMAND <br />
-            <span className="italic font-light text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-pink-500 to-indigo-500">
-              CENTER.
-            </span>
-          </h1>
-          <p className="text-gray-500 max-w-xl text-xs md:text-sm font-medium tracking-tight">
-            Upload your professional matrix and target description. Our neural
-            engine will decrypt the optimal strategy for success.
-          </p>
-        </motion.div>
+        <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight mb-3">
+          Resume & Technical Roadmap Generator
+        </h1>
+        <p className="text-slate-400 max-w-2xl text-sm">
+          Upload your resume and target job description. Our engine computes ATS compatibility, identifies skill gaps, and creates a 5-day interview roadmap.
+        </p>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <main className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* INPUT PANEL */}
-        <div className="lg:col-span-8 space-y-10 order-2 lg:order-1">
+        <div className="lg:col-span-8 space-y-6 order-2 lg:order-1">
           {/* 1. Job Description Card */}
-          <div className="group bg-white/[0.03] border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-1 hover:border-white/10 transition-all duration-500 shadow-2xl">
-            <div className="bg-[#030014]/40 rounded-[1.8rem] md:rounded-[2.3rem] p-5 md:p-8 backdrop-blur-3xl">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 text-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
-                    <Briefcase size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-500">
-                      Step 01
-                    </h3>
-                    <p className="text-sm font-bold text-white uppercase tracking-tight">
-                      Target Parameters
-                    </p>
-                  </div>
-                </div>
+          <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-6 md:p-8 backdrop-blur-xl shadow-xl">
+            <div className="flex items-center gap-3.5 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
+                <Briefcase size={19} />
               </div>
-              <textarea
-                className="w-full h-48 md:h-72 bg-black/40 border border-white/5 rounded-2xl md:rounded-3xl p-5 md:p-8 text-sm text-gray-300 focus:border-pink-500/40 outline-none transition-all resize-none placeholder:text-gray-800 font-mono shadow-inner"
-                placeholder="PASTE JOB DESCRIPTION OR SPECIFICATIONS HERE..."
-                onChange={(e) => setJobDescription(e.target.value)}
-              />
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-400">
+                  Step 1
+                </span>
+                <p className="text-sm font-bold text-white">
+                  Target Job Description
+                </p>
+              </div>
             </div>
+            <textarea
+              className="w-full h-44 md:h-56 bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-xs md:text-sm text-slate-200 focus:border-indigo-500/60 outline-none transition-all resize-none placeholder:text-slate-600"
+              placeholder="Paste the job description, required skills, and responsibilities here..."
+              onChange={(e) => setJobDescription(e.target.value)}
+            />
           </div>
 
           {/* 2. Upload & Profile Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div
               onClick={() => resumeInputRef.current.click()}
-              className={`group relative min-h-[220px] md:min-h-[280px] bg-white/[0.03] border-2 border-dashed rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 flex flex-col items-center justify-center cursor-pointer transition-all duration-500 ${
+              className={`group relative min-h-[220px] bg-slate-900/60 border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all ${
                 fileName
-                  ? "border-emerald-500/40 bg-emerald-500/[0.05]"
-                  : "border-white/5 hover:border-pink-500/40 hover:bg-white/[0.05]"
+                  ? "border-emerald-500/50 bg-emerald-500/[0.04]"
+                  : "border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900"
               }`}
             >
               <input
                 type="file"
                 ref={resumeInputRef}
                 className="hidden"
-                accept=".pdf,.docx"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
                 onChange={handleFileChange}
               />
               <div
-                className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:rotate-6 ${
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all ${
                   fileName
-                    ? "bg-emerald-500/20 text-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
-                    : "bg-white/5 text-gray-500 group-hover:text-pink-500 group-hover:bg-pink-500/10"
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : "bg-slate-800 text-indigo-400 group-hover:scale-105"
                 }`}
               >
-                {fileName ? <ShieldCheck size={32} /> : <Upload size={32} />}
+                {fileName ? <ShieldCheck size={28} /> : <Upload size={28} />}
               </div>
               <div className="text-center">
-                <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white break-all px-4">
-                  {fileName ? fileName : "Inject Resume"}
+                <p className="text-xs font-bold text-white break-all px-3">
+                  {fileName ? fileName : "Upload Resume (PDF or Image)"}
                 </p>
-                <p className="text-[9px] text-gray-500 mt-2 font-bold uppercase tracking-widest opacity-60">
-                  PDF / DOCX Supported
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Click to browse or drag and drop file
                 </p>
               </div>
             </div>
 
-            <div className="bg-white/[0.03] border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 hover:bg-white/[0.05] transition-all duration-500">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-500">
-                  <User size={20} />
+            <div className="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-6 flex flex-col">
+              <div className="flex items-center gap-3.5 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 text-sky-400">
+                  <User size={19} />
                 </div>
                 <div>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">
-                    Step 02
-                  </h3>
-                  <p className="text-sm font-bold text-white uppercase tracking-tight">
-                    Bio-Context
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-sky-400">
+                    Step 2
+                  </span>
+                  <p className="text-sm font-bold text-white">
+                    Professional Summary (Optional)
                   </p>
                 </div>
               </div>
               <textarea
-                className="w-full h-32 md:h-40 bg-black/40 border border-white/5 rounded-2xl md:rounded-3xl p-6 text-xs text-gray-400 outline-none focus:border-indigo-500/40 resize-none transition-all"
-                placeholder="Briefly describe your unique professional edge..."
+                className="w-full flex-1 min-h-[120px] bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-xs md:text-sm text-slate-200 outline-none focus:border-indigo-500/60 resize-none transition-all placeholder:text-slate-600"
+                placeholder="Describe your background, key achievements, or career goals..."
                 onChange={(e) => setSelfDescription(e.target.value)}
               />
             </div>
           </div>
 
           {/* Action Hub */}
-          <div className="flex flex-col md:flex-row items-center justify-between p-6 md:p-10 bg-gradient-to-r from-white/[0.04] to-transparent border border-white/10 rounded-[2rem] md:rounded-[3rem] gap-8 shadow-2xl">
-            <div className="flex flex-col gap-2 w-full md:w-auto text-center md:text-left">
-              <h4 className="text-white font-black uppercase tracking-widest text-xs">
-                Execute Protocol
+          <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-slate-900/60 border border-slate-800/90 rounded-2xl gap-4 shadow-xl">
+            <div>
+              <h4 className="text-white font-bold text-sm">
+                Ready to Generate Analysis
               </h4>
-              {!user?.grokApiKey && (
-                <div className="flex items-center justify-center md:justify-start gap-2 px-3 py-1.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
-                  <Lock size={10} className="text-amber-500" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-amber-500/80">
-                    API Authorization Required
-                  </span>
-                </div>
-              )}
+              <p className="text-xs text-slate-400">
+                Includes ATS match score, technical Q&A, and 5-day roadmap
+              </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
-                onClick={handleFreeAnalysis}
-                className="w-full md:w-auto px-6 py-4 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95 text-gray-300 hover:text-white"
+                onClick={() => handleRunAnalysis("analysis")}
+                className="px-5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-semibold text-xs text-slate-200 transition-all cursor-pointer"
               >
-                Scan Matrix
+                Quick ATS Scan
               </button>
 
               <button
-                onClick={handleFullStrategy}
-                disabled={!user?.grokApiKey}
-                className={`w-full md:w-auto px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 ${
-                  user?.grokApiKey
-                    ? "bg-white text-black hover:bg-pink-600 hover:text-white shadow-[0_0_20px_rgba(219,39,119,0.3)]"
-                    : "bg-white/5 text-gray-600 cursor-not-allowed border border-white/5"
-                }`}
+                onClick={() => handleRunAnalysis("full")}
+                className="px-6 py-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20"
               >
-                <Sparkles
-                  size={16}
-                  className={user?.grokApiKey ? "animate-pulse" : ""}
-                />
-                Full Strategy
+                <Sparkles size={15} />
+                Generate Full Strategy
               </button>
             </div>
           </div>
         </div>
 
-        {/* RECENT LOGS SIDEBAR */}
-        <aside className="lg:col-span-4 space-y-8 order-1 lg:order-2">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-3">
-              <History size={16} className="text-pink-500" />
-              <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
-                Archives
+        {/* RECENT REPORTS SIDEBAR */}
+        <aside className="lg:col-span-4 space-y-4 order-1 lg:order-2">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <History size={15} className="text-indigo-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Recent Reports
               </h2>
             </div>
-            <div className="h-[1px] flex-1 bg-gradient-to-r from-white/10 to-transparent ml-4" />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
             <AnimatePresence>
               {reports.slice(0, 6).map((report, i) => (
                 <motion.div
                   key={report._id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: i * 0.08 }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/interview/${report._id}`)}
-                  className="group relative p-6 bg-white/[0.02] border border-white/5 rounded-[2rem] hover:border-pink-500/40 hover:bg-white/[0.05] cursor-pointer transition-all duration-500 overflow-hidden"
+                  className="group p-4 bg-slate-900/60 border border-slate-800/90 rounded-xl hover:border-indigo-500/40 hover:bg-slate-900 cursor-pointer transition-all"
                 >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/5 blur-3xl -z-10 group-hover:bg-pink-500/10 transition-colors" />
-
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-black text-gray-200 group-hover:text-pink-400 transition-colors truncate max-w-[150px] uppercase tracking-tighter">
-                      {report.title || "Standard Scan"}
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-slate-200 group-hover:text-indigo-300 transition-colors truncate max-w-[180px]">
+                      {report.title || "Resume Analysis"}
                     </p>
-                    <div className="flex items-center gap-1">
-                      <div className="w-1 h-1 rounded-full bg-pink-500 animate-pulse" />
-                      <span className="text-[11px] font-black text-white">
-                        {report.matchScore}%
-                      </span>
-                    </div>
+                    <span className="text-xs font-bold text-emerald-400">
+                      {report.matchScore}%
+                    </span>
                   </div>
 
-                  <div className="flex items-center justify-between mt-auto">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest px-2 py-1 bg-white/5 rounded-md group-hover:text-gray-400">
-                        {new Date(report.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 group-hover:bg-pink-500 transition-all duration-500">
-                      <ChevronRight
-                        size={14}
-                        className="text-gray-600 group-hover:text-white"
-                      />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-500">
+                      {new Date(report.createdAt).toLocaleDateString()}
+                    </span>
+                    <ChevronRight
+                      size={14}
+                      className="text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all"
+                    />
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
 
             {reports.length === 0 && (
-              <div className="col-span-full py-16 text-center border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/[0.01]">
-                <FileText
-                  size={40}
-                  className="mx-auto text-gray-900 mb-4 opacity-20"
-                />
-                <p className="text-[9px] font-black text-gray-700 uppercase tracking-[0.5em]">
-                  No Data Cached
+              <div className="col-span-full py-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/30">
+                <FileText size={28} className="mx-auto text-slate-600 mb-2" />
+                <p className="text-xs font-medium text-slate-500">
+                  No previous reports yet
                 </p>
               </div>
             )}
@@ -354,9 +291,9 @@ const Home = () => {
 
           <button
             onClick={() => navigate("/dashboard")}
-            className="w-full py-4 bg-white/5 border border-white/5 rounded-2xl text-[9px] font-black uppercase tracking-[0.3em] text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+            className="w-full py-3 bg-slate-900/60 border border-slate-800 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
           >
-            View All Intelligence
+            View All Reports
           </button>
         </aside>
       </main>

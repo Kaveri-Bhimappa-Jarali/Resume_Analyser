@@ -45,10 +45,11 @@ async function registerUserController(req, res) {
     user.otpExpiry = Date.now() + 10 * 60 * 1000;
 
     await user.save();
+    console.log(`🔑 [OTP] Registration verification code for ${user.email} is: ${otp}`);
 
-    await emailApi.sendTransacEmail({
+    emailApi.sendTransacEmail({
       sender: {
-        email: "santraakash999@gmail.com",
+        email: process.env.SENDER_EMAIL || "santraakash999@gmail.com",
         name: "Nexus AI",
       },
       to: [{ email: user.email }],
@@ -79,54 +80,50 @@ async function registerUserController(req, res) {
           margin-bottom: 30px;
           letter-spacing: -1px;
         }
-        h2 {
-          color: #1f2937;
-          font-size: 22px;
-          margin-bottom: 10px;
-        }
-        p {
-          color: #6b7280;
-          line-height: 1.6;
-          margin-bottom: 25px;
+        .logo span {
+          color: #f43f5e; /* Pink accent */
         }
         .otp-container {
           background: #f3f4f6;
-          border-radius: 12px;
           padding: 20px;
-          margin: 25px 0;
-          border: 1px dashed #d1d5db;
+          border-radius: 12px;
+          margin: 30px 0;
+          border: 1px solid #e5e7eb;
         }
         .otp-code {
-          font-size: 36px;
-          font-weight: 800;
-          color: #4f46e5;
-          letter-spacing: 8px;
+          font-size: 32px;
+          font-weight: 900;
+          letter-spacing: 6px;
+          color: #111827;
           margin: 0;
         }
-        .footer {
-          margin-top: 25px;
-          font-size: 12px;
-          color: #9ca3af;
+        p {
+          color: #4b5563;
+          font-size: 14px;
+          line-height: 1.6;
+          margin-bottom: 10px;
         }
-        .timer {
-          font-weight: 600;
-          color: #ef4444;
+        .footer {
+          margin-top: 35px;
+          font-size: 11px;
+          color: #9ca3af;
+          border-top: 1px solid #f3f4f6;
+          padding-top: 20px;
         }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="card">
-          <div class="logo">NEXUS AI</div>
-          <h2>Verify your email</h2>
-          <p>To complete your registration, please use the following one-time password (OTP):</p>
+          <div class="logo">NEXUS<span>.</span></div>
+          <p>Hello,</p>
+          <p>Welcome to Nexus AI! Use the verification code below to complete your registration:</p>
           
           <div class="otp-container">
             <h1 class="otp-code">${otp}</h1>
           </div>
-
-          <p>This code will expire in <span class="timer">10 minutes</span>.</p>
-          <p>If you didn't request this, you can safely ignore this email.</p>
+          
+          <p>This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.</p>
           
           <div class="footer">
             &copy; 2026 Nexus AI. All rights reserved.
@@ -136,7 +133,7 @@ async function registerUserController(req, res) {
     </body>
     </html>
   `,
-    });
+    }).catch(err => console.error("❌ Error sending verification email:", err.response?.body || err.response?.text || err.message || err));
 
     res.status(201).json({
       message: "Verification OTP sent to your email",
@@ -146,6 +143,7 @@ async function registerUserController(req, res) {
         email: user.email,
         role: user.role,
       },
+      otp: process.env.NODE_ENV !== "production" ? otp : undefined,
     });
   } catch (error) {
     res.status(500).json({
@@ -195,14 +193,14 @@ async function loginUserController(req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true, 
-      sameSite: "none", 
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
       path: "/",
     });
 
     res.status(200).json({
       message: "User logged in successfully",
-      token, 
+      token,
       user: {
         id: user._id,
         username: user.username,
@@ -292,10 +290,11 @@ async function forgotPasswordController(req, res) {
     user.otpExpiry = Date.now() + 10 * 60 * 1000;
 
     await user.save();
+    console.log(`🔑 [OTP] Password reset code for ${email} is: ${otp}`);
 
-    await emailApi.sendTransacEmail({
+    emailApi.sendTransacEmail({
       sender: {
-        email: "santraakash999@gmail.com",
+        email: process.env.SENDER_EMAIL || "santraakash999@gmail.com",
         name: "Nexus AI",
       },
       to: [{ email }],
@@ -306,10 +305,11 @@ async function forgotPasswordController(req, res) {
         <h1>${otp}</h1>
         <p>This code expires in 10 minutes.</p>
       `,
-    });
+    }).catch(err => console.error("❌ Error sending password reset email:", err.response?.body || err.response?.text || err.message || err));
 
     res.status(200).json({
       message: "OTP sent to email",
+      otp: process.env.NODE_ENV !== "production" ? otp : undefined,
     });
   } catch (error) {
     res.status(500).json({
@@ -342,9 +342,9 @@ async function verifyOtpController(req, res) {
     // user.otpExpiry = null;
 
     await user.save();
-    await emailApi.sendTransacEmail({
+    emailApi.sendTransacEmail({
       sender: {
-        email: "santraakash999@gmail.com",
+        email: process.env.SENDER_EMAIL || "santraakash999@gmail.com",
         name: "Nexus AI",
       },
       to: [{ email: user.email }],
@@ -353,7 +353,7 @@ async function verifyOtpController(req, res) {
   <h1>Welcome to Nexus</h1>
   <p>Your account has been verified successfully.</p>
   `,
-    });
+    }).catch(err => console.error("❌ Error sending welcome email:", err.response?.body || err.response?.text || err.message || err));
 
     res.status(200).json({
       message: "Email verified successfully",

@@ -54,13 +54,13 @@ const Register = () => {
             <h1 className="text-6xl font-black tracking-tighter text-white leading-none">
               Join <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-fuchsia-400">
-                Nexus
+                Platform
               </span>
             </h1>
             <p className="text-gray-400 text-lg font-light max-w-[280px] leading-relaxed">
               Initialize your{" "}
-              <span className="text-gray-200">neural credentials</span> and
-              enter the protocol.
+              <span className="text-gray-200">account details</span> and
+              get started.
             </p>
           </div>
         </div>
@@ -86,7 +86,7 @@ const Register = () => {
                 set: setUsername,
               },
               {
-                label: "Neural Address",
+                label: "Email Address",
                 icon: Mail,
                 type: "email",
                 placeholder: "Enter email",
@@ -94,7 +94,7 @@ const Register = () => {
                 set: setEmail,
               },
               {
-                label: "Access Key",
+                label: "Password",
                 icon: Lock,
                 type: "password",
                 placeholder: "••••••••",

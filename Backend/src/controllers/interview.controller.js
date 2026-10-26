@@ -1,13 +1,11 @@
-import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
-
 import {
   generateInterviewReport,
   generateResumePdf,
+  evaluateInterviewAnswer,
 } from "../services/ai.service.js";
 
 import interviewReportModel from "../models/interviewReport.model.js";
-import userModel from "../models/user.model.js";
-import { decrypt } from "../utils/encryption.js";
+import { extractTextFromResume } from "../services/ocr.service.js";
 import { analyzeResume } from "../services/resume.service.js";
 
 /**
@@ -17,25 +15,22 @@ async function generateInterViewReportController(req, res) {
   try {
     const { selfDescription, jobDescription, mode = "full" } = req.body;
 
-    if (!req.file) {
+    if (!req.file && !selfDescription?.trim()) {
       return res.status(400).json({
-        message: "Resume PDF is required.",
+        message: "Please upload a resume file or provide a profile description.",
       });
     }
 
-    /* ---------------- PARSE RESUME ---------------- */
+    /* ---------------- OCR / TEXT EXTRACTION ---------------- */
 
-    const pdf = await pdfjs.getDocument({
-      data: new Uint8Array(req.file.buffer),
-    }).promise;
-
-    let resumeText = "";
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const strings = content.items.map((item) => item.str);
-      resumeText += strings.join(" ") + " ";
+    let resumeText = selfDescription || "";
+    if (req.file) {
+      const extracted = await extractTextFromResume(
+        req.file.buffer,
+        req.file.mimetype
+      );
+      resumeText = extracted.text;
+      console.log(`Resume text extracted via ${extracted.method}`);
     }
 
     /* ---------------- ML ANALYSIS ---------------- */
@@ -62,60 +57,19 @@ async function generateInterViewReportController(req, res) {
 
     const matchScore = resumeAnalysis?.job_match_score ?? 0;
 
-    /* ---------------- FREE MODE ---------------- */
-
-    if (mode === "analysis") {
-      const title =
-        jobDescription?.split("\n")[0]?.slice(0, 60) ||
-        "Resume Analysis Report";
-
-      const interviewReport = await interviewReportModel.create({
-        user: req.user.id,
-        title,
-        resume: resumeText,
-        selfDescription,
-        jobDescription,
-
-        resumeAnalysis: {
-          resume_skills: resumeAnalysis.resume_skills || [],
-          recommended_jobs: resumeAnalysis.recommended_jobs || [],
-          career_paths: resumeAnalysis.career_paths || [],
-        },
-
-        skillGaps: resumeAnalysis.skillGaps || [],
-        live_jobs: resumeAnalysis.live_jobs || resumeAnalysis.liveJobs || [],
-        matchScore,
-      });
-
-      return res.status(201).json({
-        message: "Resume analysis generated successfully.",
-        interviewReport,
-      });
-    }
-
-    /* ---------------- FULL MODE ---------------- */
-
-    const user = await userModel.findById(req.user.id);
-
-    if (!user || !user.grokApiKey) {
-      return res.status(400).json({
-        message: "Please add your Groq API key in Settings.",
-      });
-    }
-
-    const apiKey = decrypt(user.grokApiKey);
+    /* ---------------- AI STRATEGY & ROADMAP GENERATION ---------------- */
 
     const interViewReportByAi = await generateInterviewReport({
       resume: resumeText,
       selfDescription,
       jobDescription,
       resumeAnalysis,
-      apiKey,
     });
 
     const title =
-      jobDescription?.split("\n")[0]?.slice(0, 60) ||
-      "Interview Strategy Report";
+      jobDescription?.split("\n")[0]?.trim()?.slice(0, 60) ||
+      interViewReportByAi?.title ||
+      (mode === "analysis" ? "Resume Analysis Report" : "Interview Strategy Report");
 
     const interviewReport = await interviewReportModel.create({
       user: req.user.id,
@@ -130,10 +84,12 @@ async function generateInterViewReportController(req, res) {
         career_paths: resumeAnalysis.career_paths || [],
       },
 
-      matchScore,
+      matchScore: matchScore || interViewReportByAi.matchScore || 0,
 
       skillGaps:
-        interViewReportByAi.skillGaps || resumeAnalysis.skillGaps || [],
+        interViewReportByAi.skillGaps?.length > 0
+          ? interViewReportByAi.skillGaps
+          : resumeAnalysis.skillGaps || [],
 
       technicalQuestions: interViewReportByAi.technicalQuestions || [],
 
@@ -174,6 +130,38 @@ async function getInterviewReportByIdController(req, res) {
       return res.status(404).json({
         message: "Interview report not found.",
       });
+    }
+
+    // Backfill technical questions, behavioral questions, and preparation roadmap for older reports if missing
+    if (
+      !interviewReport.technicalQuestions?.length ||
+      !interviewReport.preparationPlan?.length
+    ) {
+      const generated = await generateInterviewReport({
+        resume: interviewReport.resume || "",
+        selfDescription: interviewReport.selfDescription || "",
+        jobDescription: interviewReport.jobDescription || "",
+        resumeAnalysis: {
+          resume_skills: interviewReport.resumeAnalysis?.resume_skills || [],
+          job_match_score: interviewReport.matchScore || 0,
+          skillGaps: interviewReport.skillGaps || [],
+        },
+      });
+
+      if (!interviewReport.technicalQuestions?.length) {
+        interviewReport.technicalQuestions = generated.technicalQuestions || [];
+      }
+      if (!interviewReport.behavioralQuestions?.length) {
+        interviewReport.behavioralQuestions = generated.behavioralQuestions || [];
+      }
+      if (!interviewReport.preparationPlan?.length) {
+        interviewReport.preparationPlan = generated.preparationPlan || [];
+      }
+      if (!interviewReport.skillGaps?.length && generated.skillGaps?.length) {
+        interviewReport.skillGaps = generated.skillGaps;
+      }
+
+      await interviewReport.save();
     }
 
     res.status(200).json({
@@ -225,21 +213,10 @@ async function generateResumePdfController(req, res) {
 
     const { resume, jobDescription, selfDescription } = interviewReport;
 
-    const user = await userModel.findById(req.user.id);
-
-    if (!user || !user.grokApiKey) {
-      return res.status(400).json({
-        message: "Please add your Groq API key in Settings.",
-      });
-    }
-
-    const apiKey = decrypt(user.grokApiKey);
-
     const pdfBuffer = await generateResumePdf({
       resume,
       jobDescription,
       selfDescription,
-      apiKey,
     });
 
     res.set({
@@ -258,9 +235,76 @@ async function generateResumePdfController(req, res) {
   }
 }
 
+/**
+ * @description Controller to evaluate a mock interview answer.
+ */
+async function handlePracticeRespondController(req, res) {
+  try {
+    const { interviewId } = req.params;
+    const { type, currentQuestionIndex, userAnswer } = req.body;
+
+    if (userAnswer === undefined || userAnswer === null || userAnswer.trim() === "") {
+      return res.status(400).json({
+        message: "User answer is required.",
+      });
+    }
+
+    const report = await interviewReportModel.findOne({
+      _id: interviewId,
+      user: req.user.id,
+    });
+
+    if (!report) {
+      return res.status(404).json({
+        message: "Interview report not found.",
+      });
+    }
+    const questions = type === "technical" ? report.technicalQuestions : report.behavioralQuestions;
+    
+    if (!questions || questions.length === 0) {
+      return res.status(400).json({
+        message: "No questions generated for this category.",
+      });
+    }
+
+    if (currentQuestionIndex < 0 || currentQuestionIndex >= questions.length) {
+      return res.status(400).json({
+        message: "Invalid question index.",
+      });
+    }
+
+    const questionText = questions[currentQuestionIndex].question;
+    const isFinished = currentQuestionIndex === questions.length - 1;
+
+    const evaluation = await evaluateInterviewAnswer({
+      resume: report.resume,
+      jobDescription: report.jobDescription,
+      questionText,
+      userAnswer,
+      isFinished,
+    });
+
+    return res.status(200).json({
+      success: true,
+      feedback: evaluation.feedback,
+      score: evaluation.score,
+      isFinished,
+      finalSummary: evaluation.finalSummary || null,
+      nextQuestion: isFinished ? null : questions[currentQuestionIndex + 1].question,
+    });
+  } catch (error) {
+    console.error("Evaluate Practice Answer Controller Error:", error);
+    return res.status(500).json({
+      message: "Server error while evaluating practice answer.",
+      error: error.message,
+    });
+  }
+}
+
 export default {
   generateInterViewReportController,
   getInterviewReportByIdController,
   getAllInterviewReportsController,
   generateResumePdfController,
+  handlePracticeRespondController,
 };

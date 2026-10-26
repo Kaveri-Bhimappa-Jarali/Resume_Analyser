@@ -1,44 +1,41 @@
-import axios from "axios";
+import api from "../../../services/api";
 
-const API = `${import.meta.env.VITE_BACKEND_URL}/api/plans`;
+const API = "/api/plans";
 
 export const createPlan = async (data) => {
-  const res = await axios.post(API, data, { withCredentials: true });
+  const res = await api.post(API, data);
   return res.data;
 };
 
 export const getPlans = async () => {
-  const res = await axios.get(API, { withCredentials: true });
+  const res = await api.get(API);
   return res.data;
 };
 
 export const getPlanById = async (planId) => {
-  const res = await axios.get(`${API}/${planId}`, { withCredentials: true });
+  const res = await api.get(`${API}/${planId}`);
   return res.data;
 };
 
 export const toggleTask = async (planId, dayIndex, taskIndex) => {
-  const res = await axios.patch(
+  const res = await api.patch(
     `${API}/${planId}/day/${dayIndex}/task/${taskIndex}`,
-    {},
-    { withCredentials: true }
+    {}
   );
   return res.data;
 };
 
 export const addTask = async (planId, dayIndex, text) => {
-  const res = await axios.post(
+  const res = await api.post(
     `${API}/${planId}/day/${dayIndex}`,
-    { text },
-    { withCredentials: true }
+    { text }
   );
   return res.data;
 };
 
 export const deleteTask = async (planId, dayIndex, taskIndex) => {
-  const res = await axios.delete(
-    `${API}/${planId}/day/${dayIndex}/task/${taskIndex}`,
-    { withCredentials: true }
+  const res = await api.delete(
+    `${API}/${planId}/day/${dayIndex}/task/${taskIndex}`
   );
   return res.data;
 };

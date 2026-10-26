@@ -57,7 +57,7 @@ const Login = () => {
             </h1>
             <p className="text-gray-400 text-lg font-light max-w-[280px] leading-relaxed">
               Verify your{" "}
-              <span className="text-gray-200">neural signature</span> to
+              <span className="text-gray-200">identity</span> to
               continue.
             </p>
           </div>
@@ -70,7 +70,7 @@ const Login = () => {
               {/* EMAIL */}
               <div className="space-y-3">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 ml-1">
-                  Neural Address
+                  Email Address
                 </label>
                 <div className="relative group">
                   <Mail

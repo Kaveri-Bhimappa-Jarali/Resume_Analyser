@@ -13,7 +13,14 @@ const interviewRouter = express.Router();
 interviewRouter.post(
   "/",
   authMiddleware,
-  upload.single("resume"),
+  (req, res, next) => {
+    upload.single("resume")(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ message: err.message });
+      }
+      next();
+    });
+  },
   interviewController.generateInterViewReportController
 );
 
@@ -42,6 +49,15 @@ interviewRouter.post(
   "/resume/pdf/:interviewReportId",
   authMiddleware,
   interviewController.generateResumePdfController
+);
+
+/**
+ * @route POST /api/interview/:interviewId/practice
+ */
+interviewRouter.post(
+  "/:interviewId/practice",
+  authMiddleware,
+  interviewController.handlePracticeRespondController
 );
 
 export default interviewRouter;

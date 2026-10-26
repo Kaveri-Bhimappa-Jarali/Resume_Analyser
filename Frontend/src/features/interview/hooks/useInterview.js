@@ -56,9 +56,8 @@ export const useInterview = () => {
       }
 
     } catch (error) {
-
       console.log("Generate Report Error:", error);
-
+      throw error;
     } finally {
 
       setLoading(false);

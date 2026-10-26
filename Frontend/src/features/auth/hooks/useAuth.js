@@ -39,7 +39,11 @@ export const useAuth = () => {
 
     try {
       // ✅ DO NOT set user here (VERY IMPORTANT)
-      await register({ username, email, password });
+      const data = await register({ username, email, password });
+      
+      if (data && data.otp) {
+        console.log(`%c🔑 [DEV MODE] Registration verification code is: ${data.otp}`, "color: #ec4899; font-weight: bold; font-size: 14px;");
+      }
 
       return true;
     } catch (err) {
