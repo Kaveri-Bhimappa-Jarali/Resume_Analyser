@@ -34,7 +34,7 @@ export default function Sidebar() {
 
           <div>
             <span className="text-lg font-extrabold text-white tracking-tight block leading-none">
-              NEXUS<span className="text-indigo-400">.AI</span>
+              AURALIS<span className="text-indigo-400">.AI</span>
             </span>
             <span className="text-[10px] font-medium text-slate-500 tracking-wider uppercase">
               Career Suite

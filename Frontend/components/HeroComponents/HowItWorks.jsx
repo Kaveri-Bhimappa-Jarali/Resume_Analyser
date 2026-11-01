@@ -44,7 +44,7 @@ export default function HowItWorks() {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight"
           >
-            The Nexus <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-500">Workflow</span>
+            The Auralis <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-500">Workflow</span>
           </motion.h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto font-medium leading-relaxed">
             A three-stage automated pipeline designed to transform your application data into a winning interview strategy.

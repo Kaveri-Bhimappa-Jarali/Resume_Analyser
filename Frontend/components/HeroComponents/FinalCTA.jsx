@@ -35,7 +35,7 @@ export default function FinalCTA() {
 
           {/* Descriptive Text */}
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-14 leading-relaxed font-medium">
-            Join a community of high-performing developers using Nexus AI 
+            Join a community of high-performing developers using Auralis AI 
             to turn applications into offers with data-driven interview prep.
           </p>
 

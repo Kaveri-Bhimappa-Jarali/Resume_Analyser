@@ -58,7 +58,7 @@ const Settings = () => {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("nexus_user_settings");
+      const saved = localStorage.getItem("auralis_user_settings");
       if (saved) {
         setPrefs({ ...DEFAULT_PREFS, ...JSON.parse(saved) });
       }
@@ -139,7 +139,7 @@ const Settings = () => {
 
   const handleSavePreferences = () => {
     try {
-      localStorage.setItem("nexus_user_settings", JSON.stringify(prefs));
+      localStorage.setItem("auralis_user_settings", JSON.stringify(prefs));
       setPrefsSaved(true);
       setTimeout(() => setPrefsSaved(false), 3000);
     } catch (e) {

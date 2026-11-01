@@ -14,7 +14,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="text-white text-2xl font-bold mb-3">
-              Nexus<span className="text-pink-500">.</span>
+              Auralis<span className="text-pink-500">.</span>
             </h3>
             <p className="text-gray-400 text-sm leading-relaxed">
               AI-powered platform helping developers improve resumes,
@@ -81,7 +81,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-6 text-gray-500 text-sm">
 
-          <span>© {new Date().getFullYear()} Nexus AI. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Auralis AI. All rights reserved.</span>
 
           <div className="flex gap-6 mt-4 md:mt-0">
             <span>Privacy Policy</span>

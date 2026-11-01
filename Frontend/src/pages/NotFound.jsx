@@ -62,7 +62,7 @@ export default function NotFound() {
           </h2>
           
           <p className="text-gray-500 max-w-sm mx-auto font-medium mb-12 text-sm md:text-base leading-relaxed">
-            The neural node you are looking for does not exist or has been de-indexed from the Nexus.
+            The neural node you are looking for does not exist or has been de-indexed from the Auralis.
           </p>
         </motion.div>
 

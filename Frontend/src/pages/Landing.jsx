@@ -176,7 +176,7 @@ export default function Landing() {
                 </span>
               </div>
               <span className="text-white font-extrabold text-lg md:text-xl tracking-tight hidden sm:block">
-                Nexus<span className="text-pink-500">.</span>
+                Auralis<span className="text-pink-500">.</span>
               </span>
             </div>
 
@@ -378,7 +378,7 @@ export default function Landing() {
               </h2>
               <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
                 Students across the world are preparing smarter interview
-                strategies using Nexus AI.
+                strategies using Auralis AI.
               </p>
             </motion.div>
 

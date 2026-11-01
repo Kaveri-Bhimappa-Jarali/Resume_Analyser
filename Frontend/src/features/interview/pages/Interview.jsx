@@ -844,7 +844,7 @@ const Interview = () => {
           <ArrowLeft size={20} />
         </button>
         <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
-          Nexus Report
+          Auralis Report
         </span>
         <button
           onClick={() => setSidebarOpen(!isSidebarOpen)}

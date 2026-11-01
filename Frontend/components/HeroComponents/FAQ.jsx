@@ -7,9 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function FAQ() {
   const faqs = [
     {
-      question: "How does Nexus analyze resumes?",
+      question: "How does Auralis analyze resumes?",
       answer:
-        "Nexus uses machine learning models to compare your resume with real job descriptions and identify skill gaps, strengths, and improvement areas.",
+        "Auralis uses machine learning models to compare your resume with real job descriptions and identify skill gaps, strengths, and improvement areas.",
     },
     {
       question: "Is my resume data secure?",
@@ -17,17 +17,17 @@ export default function FAQ() {
         "Yes. Your uploaded data is encrypted and only used for generating analysis results. We never share your data with third parties.",
     },
     {
-      question: "Is Nexus free to use?",
+      question: "Is Auralis free to use?",
       answer:
-        "Yes. Nexus currently provides free resume analysis and interview preparation tools while the platform is in development.",
+        "Yes. Auralis currently provides free resume analysis and interview preparation tools while the platform is in development.",
     },
     {
       question: "Can developers contribute to the project?",
       answer:
-        "Absolutely. Nexus is an open-source project. Developers can contribute through GitHub by submitting pull requests or reporting issues.",
+        "Absolutely. Auralis is an open-source project. Developers can contribute through GitHub by submitting pull requests or reporting issues.",
     },
     {
-      question: "Does Nexus support different tech roles?",
+      question: "Does Auralis support different tech roles?",
       answer:
         "Yes. The system supports multiple developer roles including frontend, backend, full-stack, and data-related positions.",
     },
@@ -52,7 +52,7 @@ export default function FAQ() {
             Common <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-500">Queries</span>
           </h2>
           <p className="text-gray-400 text-lg">
-            Everything you need to know about the Nexus ecosystem.
+            Everything you need to know about the Auralis ecosystem.
           </p>
         </div>
 

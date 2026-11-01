@@ -154,7 +154,7 @@ const Login = () => {
           {/* REGISTER LINK */}
           <div className="mt-10 text-center">
             <p className="text-gray-500 text-sm font-medium">
-              New to the Nexus?{" "}
+              New to the Auralis?{" "}
               <Link
                 to="/register"
                 className="text-indigo-400 hover:text-indigo-300 transition ml-1 underline-offset-4 hover:underline"
@@ -166,7 +166,7 @@ const Login = () => {
 
           <div className="absolute -bottom-12 left-0 right-0 text-center opacity-20 pointer-events-none">
             <p className="text-[9px] font-black tracking-[0.8em] uppercase text-white">
-              Nexus Auth Core // v3.0
+              Auralis Auth Core // v3.0
             </p>
           </div>
         </motion.div>

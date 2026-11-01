@@ -8,7 +8,7 @@ export default function ContributionWorkflow() {
     {
       icon: <GitFork className="w-6 h-6" />,
       title: "Fork the Repository",
-      description: "Copy the Nexus AI codebase to your own GitHub account to start your journey.",
+      description: "Copy the Auralis AI codebase to your own GitHub account to start your journey.",
       color: "text-pink-400",
       bgColor: "bg-pink-400/10",
       borderColor: "border-pink-500/20",
@@ -32,7 +32,7 @@ export default function ContributionWorkflow() {
     {
       icon: <CheckCircle className="w-6 h-6" />,
       title: "Review & Merge",
-      description: "Collaborate on feedback and get your code officially merged into Nexus AI.",
+      description: "Collaborate on feedback and get your code officially merged into Auralis AI.",
       color: "text-emerald-400",
       bgColor: "bg-emerald-400/10",
       borderColor: "border-emerald-500/20",
@@ -50,7 +50,7 @@ export default function ContributionWorkflow() {
               Contribution <span className="text-gray-500 font-light italic text-3xl md:text-4xl">Roadmap</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed">
-              Your path to becoming a Nexus AI contributor. We’ve streamlined 
+              Your path to becoming an Auralis AI contributor. We’ve streamlined 
               the process so you can focus on writing great code.
             </p>
           </div>

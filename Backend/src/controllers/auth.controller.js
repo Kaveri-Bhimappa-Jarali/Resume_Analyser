@@ -50,10 +50,10 @@ async function registerUserController(req, res) {
     emailApi.sendTransacEmail({
       sender: {
         email: process.env.SENDER_EMAIL || "santraakash999@gmail.com",
-        name: "Nexus AI",
+        name: "Auralis AI",
       },
       to: [{ email: user.email }],
-      subject: "Verify your Nexus account",
+      subject: "Verify your Auralis account",
       htmlContent: `
     <!DOCTYPE html>
     <html>
@@ -76,7 +76,7 @@ async function registerUserController(req, res) {
         .logo {
           font-size: 24px;
           font-weight: 800;
-          color: #6366f1; /* Nexus Indigo */
+          color: #6366f1; /* Auralis Indigo */
           margin-bottom: 30px;
           letter-spacing: -1px;
         }
@@ -115,9 +115,9 @@ async function registerUserController(req, res) {
     <body>
       <div class="container">
         <div class="card">
-          <div class="logo">NEXUS<span>.</span></div>
+          <div class="logo">AURALIS<span>.</span></div>
           <p>Hello,</p>
-          <p>Welcome to Nexus AI! Use the verification code below to complete your registration:</p>
+          <p>Welcome to Auralis AI! Use the verification code below to complete your registration:</p>
           
           <div class="otp-container">
             <h1 class="otp-code">${otp}</h1>
@@ -126,7 +126,7 @@ async function registerUserController(req, res) {
           <p>This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.</p>
           
           <div class="footer">
-            &copy; 2026 Nexus AI. All rights reserved.
+            &copy; 2026 Auralis AI. All rights reserved.
           </div>
         </div>
       </div>
@@ -295,7 +295,7 @@ async function forgotPasswordController(req, res) {
     emailApi.sendTransacEmail({
       sender: {
         email: process.env.SENDER_EMAIL || "santraakash999@gmail.com",
-        name: "Nexus AI",
+        name: "Auralis AI",
       },
       to: [{ email }],
       subject: "Password Reset OTP",
@@ -345,12 +345,12 @@ async function verifyOtpController(req, res) {
     emailApi.sendTransacEmail({
       sender: {
         email: process.env.SENDER_EMAIL || "santraakash999@gmail.com",
-        name: "Nexus AI",
+        name: "Auralis AI",
       },
       to: [{ email: user.email }],
-      subject: "Welcome to Nexus 🚀",
+      subject: "Welcome to Auralis 🚀",
       htmlContent: `
-  <h1>Welcome to Nexus</h1>
+  <h1>Welcome to Auralis</h1>
   <p>Your account has been verified successfully.</p>
   `,
     }).catch(err => console.error("❌ Error sending welcome email:", err.response?.body || err.response?.text || err.message || err));

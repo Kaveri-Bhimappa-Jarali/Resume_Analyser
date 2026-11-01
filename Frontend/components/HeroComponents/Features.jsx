@@ -73,7 +73,7 @@ export default function Features() {
           </h2>
 
           <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-            Nexus leverages proprietary neural networks to bridge the gap between your current profile and your dream role.
+            Auralis leverages proprietary neural networks to bridge the gap between your current profile and your dream role.
           </p>
         </div>
 

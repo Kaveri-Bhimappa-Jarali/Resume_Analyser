@@ -8,7 +8,7 @@ const testimonials = [
   {
     name: "Arjun Mehta",
     role: "Software Engineer",
-    text: "Nexus helped me identify the exact skills I was missing for backend roles. The interview strategy feature is incredibly helpful.",
+    text: "Auralis helped me identify the exact skills I was missing for backend roles. The interview strategy feature is incredibly helpful.",
   },
   {
     name: "Priya Sharma",
@@ -18,7 +18,7 @@ const testimonials = [
   {
     name: "Rahul Verma",
     role: "Full Stack Developer",
-    text: "The job insights and resume scoring feature are amazing. Nexus gives a clear roadmap to improve your profile.",
+    text: "The job insights and resume scoring feature are amazing. Auralis gives a clear roadmap to improve your profile.",
   },
   {
     name: "Sarah Chen",
@@ -45,7 +45,7 @@ export default function Testimonials() {
             What Developers Say
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Developers around the world are using Nexus to improve their
+            Developers around the world are using Auralis to improve their
             resumes and prepare smarter for interviews.
           </p>
         </div>

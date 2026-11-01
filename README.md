@@ -7,7 +7,7 @@
 ![AI](https://img.shields.io/badge/AI-ML%20%2B%20LLM-purple)
 ![Status](https://img.shields.io/badge/status-active-success)
 
-# Nexus - AI Resume Analyzer & Interview Platform
+# Auralis - AI Resume Analyzer & Interview Platform
 
 > An AI-powered platform that analyzes resumes, detects skill gaps, recommends jobs, and generates personalized interview strategies using ML + LLMs.
 

@@ -49,7 +49,7 @@ export default function OpenSource() {
           </h2>
 
           <p className="text-zinc-400 text-lg md:text-xl max-w-xl mx-auto leading-relaxed font-medium">
-            Nexus AI is powered by the community. Join developers worldwide 
+            Auralis AI is powered by the community. Join developers worldwide 
             architecting the future of recruitment.
           </p>
         </div>
